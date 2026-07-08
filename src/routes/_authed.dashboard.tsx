@@ -21,15 +21,36 @@ function Dashboard() {
 
   const isLoading = isLoadingPatients || isLoadingAppts || isLoadingShifts || isLoadingStaff;
 
-  const todayAppts = appointments.filter((a) => a.status === "scheduled");
+  const todayAppts = appointments.filter((a) => {
+    if (a.status !== "scheduled") return false;
+    if (user?.role === "staff") {
+      return a.staffId === user.id;
+    }
+    return true;
+  });
+
   const recentPatients = patients.slice(0, 5);
-  const onDuty = shifts;
+
+  const myShift = shifts.find((s) => s.staffId === user?.id);
+  const dutyText = myShift
+    ? myShift.shift.charAt(0).toUpperCase() + myShift.shift.slice(1) + " shift"
+    : "Not on duty today";
 
   const stats = [
-    { label: "Patients", value: patients.length },
-    { label: "Appts today", value: todayAppts.length },
-    { label: "Staff on duty", value: onDuty.length },
-    { label: "Staff total", value: staffList.filter((u) => u.role === "staff").length },
+    { label: "Patients", value: patients.length.toString() },
+    {
+      label: user?.role === "admin" ? "Appts today" : "My Appts today",
+      value: todayAppts.length.toString(),
+    },
+    { label: "Staff on duty", value: shifts.length.toString() },
+    ...(user?.role === "admin"
+      ? [
+          {
+            label: "Staff total",
+            value: staffList.filter((u) => u.role === "staff").length.toString(),
+          },
+        ]
+      : [{ label: "My Duty Today", value: dutyText }]),
   ];
 
   if (isLoading) {
@@ -79,13 +100,39 @@ function Dashboard() {
         <h1 className="font-serif text-4xl text-primary mt-1">
           Good {greet()}, {user?.username}.
         </h1>
+        {user?.role === "staff" && (
+          <p className="text-sm text-muted-foreground mt-2.5 flex items-center gap-2">
+            <span
+              className={`inline-block w-2 h-2 rounded-full shrink-0 ${
+                myShift ? "bg-emerald-500 animate-pulse" : "bg-muted"
+              }`}
+            />
+            {myShift ? (
+              <span>
+                You are on <strong className="text-foreground">{myShift.shift} shift</strong> today.{" "}
+                {myShift.note && (
+                  <span className="italic text-muted-foreground">({myShift.note})</span>
+                )}
+              </span>
+            ) : (
+              <span>You are not on duty today.</span>
+            )}
+          </p>
+        )}
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {stats.map((s) => (
           <div key={s.label} className="card-soft p-5">
             <div className="text-xs uppercase tracking-wider text-muted-foreground">{s.label}</div>
-            <div className="mt-2 font-serif text-3xl text-primary">{s.value}</div>
+            <div
+              className={`mt-2 font-serif text-primary truncate ${
+                s.value.length > 3 ? "text-lg font-sans font-medium mt-3" : "text-3xl"
+              }`}
+              title={s.value}
+            >
+              {s.value}
+            </div>
           </div>
         ))}
       </div>
