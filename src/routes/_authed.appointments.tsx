@@ -106,7 +106,10 @@ function AppointmentsPage() {
                 const p = patients.find((x) => x.id === a.patientId);
                 const staff = staffList.find((u) => u.id === a.staffId);
                 return (
-                  <li key={a.id} className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4">
+                  <li
+                    key={a.id}
+                    className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4"
+                  >
                     <div className="flex items-center gap-4">
                       <div className="w-16 font-mono text-sm text-primary shrink-0">{a.time}</div>
                       <div className="min-w-0">

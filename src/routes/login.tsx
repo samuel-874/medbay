@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useLogin } from "@/lib/medbay-store";
 
@@ -67,7 +67,7 @@ function LoginPage() {
           </div>
           <h2 className="font-serif text-3xl text-primary">Welcome back</h2>
           <p className="mt-2 text-sm text-muted-foreground">
-            Sign in with your staff username and PIN.
+            Sign in with your globally unique staff username and PIN.
           </p>
 
           <div className="mt-8 space-y-4">
@@ -77,9 +77,10 @@ function LoginPage() {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 className="w-full rounded-lg border border-input bg-card px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                placeholder="admin"
+                placeholder="e.g. admin"
               />
             </Field>
+
             <Field label="PIN">
               <input
                 type="password"
@@ -90,34 +91,48 @@ function LoginPage() {
                 placeholder="••••"
               />
             </Field>
+
             {err && <p className="text-sm text-destructive">{err}</p>}
+
             <button
               type="submit"
               disabled={loginMutation.isPending}
-              className="w-full rounded-lg bg-primary py-2.5 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-50"
+              className="w-full rounded-lg bg-primary py-2.5 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-50 cursor-pointer"
             >
               {loginMutation.isPending ? "Signing in..." : "Sign in"}
             </button>
-          </div>
 
-          {/* <div className="mt-8 rounded-lg border border-dashed border-border bg-secondary/40 p-4 text-xs text-muted-foreground">
-            <div className="font-medium text-foreground mb-1">Demo admin</div>
-            Username: <code className="font-mono">admin</code> · PIN:{" "}
-            <code className="font-mono">1234</code>
-          </div> */}
+            <div className="text-center text-xs text-muted-foreground mt-4">
+              New to MedBay?{" "}
+              <Link to="/register" className="text-accent hover:underline font-medium">
+                Register your hospital
+              </Link>
+            </div>
+          </div>
         </form>
       </div>
     </div>
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({
+  label,
+  helpText,
+  children,
+}: {
+  label: string;
+  helpText?: string;
+  children: React.ReactNode;
+}) {
   return (
     <label className="block">
       <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
         {label}
       </span>
       <div className="mt-1.5">{children}</div>
+      {helpText && (
+        <p className="text-[10px] text-muted-foreground mt-1 leading-normal">{helpText}</p>
+      )}
     </label>
   );
 }

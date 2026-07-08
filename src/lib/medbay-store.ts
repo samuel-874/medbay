@@ -10,6 +10,9 @@ export interface User {
   role: Role;
   status?: "active" | "inactive";
   createdAt: string;
+  hospitalId: string;
+  hospitalSlug: string;
+  hospitalName: string;
 }
 
 export interface Patient {
@@ -73,21 +76,32 @@ export function useSessionUser() {
 
       const { data: profile, error } = await supabase
         .from("profiles")
-        .select("*")
+        .select("*, hospitals(name, slug)")
         .eq("id", user.id)
         .maybeSingle();
 
       if (error || !profile) {
-        // Fallback for newly created admin or users without profiles
+        // Fallback for newly created admin or users without profiles (e.g. metadata only)
+        const parts = user.email?.split("@") || [];
+        const username = parts[0] || "user";
+        const domainParts = parts[1]?.split(".") || [];
+        const hospitalSlug =
+          domainParts.length > 2 ? domainParts[domainParts.length - 3] : "default";
+
         return {
           id: user.id,
-          username: user.email?.split("@")[0] || "user",
+          username,
           phone: "",
-          role: (user.email === "admin@medbay.local" ? "admin" : "staff") as Role,
+          role: "admin",
           createdAt: user.created_at,
+          hospitalId: "00000000-0000-0000-0000-000000000000",
+          hospitalSlug,
+          hospitalName: "MedBay Hospital",
         };
       }
 
+      const h = (profile as unknown as { hospitals: { name: string; slug: string } | null })
+        .hospitals;
       return {
         id: profile.id,
         username: profile.username,
@@ -95,6 +109,9 @@ export function useSessionUser() {
         role: profile.role as Role,
         status: profile.status,
         createdAt: profile.created_at,
+        hospitalId: profile.hospital_id,
+        hospitalSlug: h?.slug || "default",
+        hospitalName: h?.name || "MedBay Hospital",
       };
     },
     staleTime: 1000 * 60 * 5, // 5 minutes cache
@@ -543,18 +560,24 @@ export function useStaffList() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("profiles")
-        .select("*")
+        .select("*, hospitals(name, slug)")
         .order("username", { ascending: true });
 
       if (error) throw new Error(error.message);
-      return (data || []).map((p) => ({
-        id: p.id,
-        username: p.username,
-        phone: p.phone || "",
-        role: p.role as Role,
-        status: p.status,
-        createdAt: p.created_at,
-      }));
+      return (data || []).map((p) => {
+        const h = (p as unknown as { hospitals: { name: string; slug: string } | null }).hospitals;
+        return {
+          id: p.id,
+          username: p.username,
+          phone: p.phone || "",
+          role: p.role as Role,
+          status: p.status,
+          createdAt: p.created_at,
+          hospitalId: p.hospital_id,
+          hospitalSlug: h?.slug || "default",
+          hospitalName: h?.name || "MedBay Hospital",
+        };
+      });
     },
   });
 }

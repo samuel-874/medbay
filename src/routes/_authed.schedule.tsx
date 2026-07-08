@@ -111,7 +111,9 @@ function SchedulePage() {
             <tbody>
               {visibleStaff.map((u) => (
                 <tr key={u.id} className="border-b border-border last:border-0">
-                  <td className="sticky left-0 bg-card z-10 border-r border-border px-4 py-3 font-medium whitespace-nowrap">{u.username}</td>
+                  <td className="sticky left-0 bg-card z-10 border-r border-border px-4 py-3 font-medium whitespace-nowrap">
+                    {u.username}
+                  </td>
                   {days.map((d) => {
                     const iso = d.toISOString().slice(0, 10);
                     const cell = shifts.find((s) => s.staffId === u.id && s.date === iso);
